@@ -54,9 +54,7 @@ def analyze(article, days, wiki, ignore, outfile, filtercount,
 
     for editor in editor_names:
         try:
-            # FIXME: Use set() instead of dict() for this sort of use case
-            #lpages = {} # Pages for this editor
-            lpages = set()
+            lpages = {} # Pages for this editor
             contribs = site.usercontributions(editor)
             print "Pages for %s: ..." % editor.encode('utf-8'),
             rev = contribs.next() # No try/except since they have at least one edit
@@ -70,24 +68,29 @@ def analyze(article, days, wiki, ignore, outfile, filtercount,
                     if filtermaxedits != 0 and page_count > filtermaxedits:
                         # This editor has edited too many pages. Ignore them
                         raise IgnoreEditor
-                    #lpages[rev[u'title']] = None
-                    lpages.add(rev[u'title'])
+                    # Keep track of number of edits for each page
+                    lpages[rev[u'title']] = 1
+                else:
+                    lpages[rev[u'title']] = lpages[rev[u'title']] + 1
+
                 try:
                     rev = contribs.next()
                 except StopIteration:
                     break
             if filterminedits != 0 and len(lpages) < filterminedits:
                 raise IgnoreEditor
-            editors[editor] = list(lpages) # lpages.keys()
-            editors[editor].sort()
+            editors[editor] = lpages
+            #editors[editor].sort()
             print "\rPages for %s:" % editor.encode('utf-8'),
+            lpage_names = lpages.keys()
+            lpage_names.sort()
             if len(lpages) > 10:
-                print u', '.join(editors[editor][:10]).encode('utf-8'),
+                print u', '.join(['%s [%d]' % (p, lpages[p]) for p in lpage_names[:10]]).encode('utf-8'),
                 print "... (%d total)" % len(lpages)
             else:
-                print u', '.join(editors[editor]).encode('utf-8')
+                print u', '.join(['%s [%d]' % (p, lpages[p]) for p in lpage_names]).encode('utf-8')
 
-            for item in lpages: #.keys():
+            for item in lpage_names:
                 page_editors = pages.get(item, [])
                 page_editors.append(editor)
                 pages[item] = page_editors
@@ -118,7 +121,7 @@ def analyze(article, days, wiki, ignore, outfile, filtercount,
         save_count = 0
         for p in page_names:
             page_editors = pages[p]
-            row = [1 if e in page_editors else 0 for e in editor_names]
+            row = [editors[e][p] if e in page_editors else 0 for e in editor_names]
             if sum(row) >= filtercount:
                 out.writerow([p.encode('utf-8')]+row)
                 save_count += 1
