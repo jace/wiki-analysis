@@ -19,7 +19,7 @@ def analyze(article, days, wiki, ignore, outfile, filtercount,
     until = datetime.datetime.now() - datetime.timedelta(days=days)
     print "Connecting to %s..." % wiki
     site = mwclient.Site(wiki)
-    print 'Looking up article "%s"...' % article
+    print 'Revisions for "%s":' % article,
     page = site.Pages[article]
     if 0: assert isinstance(page, mwclient.page.Page)
 
@@ -33,15 +33,21 @@ def analyze(article, days, wiki, ignore, outfile, filtercount,
     #  u'anon': u'', u'revid': 33686266, u'user': u'59.92.138.207'}
 
     try:
+        revision_count = 0
         rev = revisions.next()
         while datetime.datetime(*rev[u'timestamp'][:6]) >= until: # Within daterange?
+            revision_count += 1
+            print '\rRevisions for "%s": %d since %s' % (article, revision_count,
+                '%04d/%02d/%02d %02d:%02d:%02d' % rev[u'timestamp'][:6]),
             # Make dictionary keys of editor names, but don't assign values yet
             # Ignore editors we've been asked to
             if rev[u'user'] not in ignore:
                 editors[rev[u'user']] = None
-                rev = revisions.next()
+            rev = revisions.next()
     except StopIteration:
         pass
+
+    print
 
     editor_names = editors.keys()
     editor_names.sort() # Will make table generation easier further down
