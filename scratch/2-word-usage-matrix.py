@@ -62,6 +62,7 @@ def analyze(article, start, end, wiki, ignore, outfile):
 
     # Place all editors in a dictionary
     editors = {} # Dictionary of word: (add count, remove count)
+    edit_counts = {}
     allwords = set() # Set of all words found across editors
 
     revisions = page.revisions(start=start.strftime(MWDATEFMT),
@@ -86,6 +87,7 @@ def analyze(article, start, end, wiki, ignore, outfile):
             revision_count += 1
             # Ignore editors we've been asked to
             if rev[u'user'] not in ignore:
+                edit_counts[rev[u'user']] = edit_counts.get(rev[u'user'], 0) + 1
                 editorstats = editors.get(rev[u'user'], {})
                 # Analyse content of this edit for words added and removed
                 newcontent = striptags(rev[u'*'])
@@ -114,6 +116,7 @@ def analyze(article, start, end, wiki, ignore, outfile):
         out = csv.writer(open(outfile, 'wb'))
         if 0: assert isinstance(out, csv.DictWriter)
         out.writerow(['Word/Editor'] + [e.encode('utf-8') for e in editor_names])
+        out.writerow(['Edit Count'] + [edit_counts[e] for e in editor_names])
         sorted_words = list(allwords)
         sorted_words.sort()
         for word in sorted_words:
