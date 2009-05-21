@@ -22,30 +22,10 @@ import datetime
 import csv
 import mwclient
 from worddiff import worddiff, striptags
-
-MWDATEFMT = '%Y-%m-%dT%H:%M:%SZ'
+from timehelper import parsedate, MWDATEFMT
 
 class IgnoreEditor(Exception):
     pass
-
-def parsedate(text):
-    if text == 'now':
-        return datetime.datetime.utcnow()
-    elif text == 'today':
-        return datetime.datetime.today()
-    elif text == 'yesterday':
-        return datetime.datetime.today() - datetime.timedelta(days=1)
-    else:
-        try:
-            return datetime.datetime.strptime(text, '%Y-%m-%d')
-        except ValueError:
-            try:
-                return datetime.datetime.strptime(text, '%Y/%m/%d')
-            except ValueError:
-                try:
-                    return datetime.datetime.strptime(text, '%d-%m-%Y')
-                except ValueError:
-                    return datetime.datetime.strptime(text, '%d/%m/%Y')
 
 def analyze(article, start, end, wiki, ignore, outfile):
     start = parsedate(start)
