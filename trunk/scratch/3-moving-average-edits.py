@@ -10,6 +10,7 @@ from optparse import OptionParser
 import datetime
 import csv
 import mwclient
+from pygooglechart import SimpleData
 from timehelper import parsedate, parseperiod, MWDATEFMT
 
 class NoRevisions(Exception):
@@ -48,7 +49,7 @@ def analyze(article, wiki, start, end, interval, number, output):
                                end=end.strftime(MWDATEFMT),
                                dir='newer')
     try:
-        counts.append([curdate, 0])
+        counts.append([curdate, 0, set()])
         while True:
             rev = revisions.next()
             revdate = datetime.datetime(*(rev[u'timestamp'][:6]))
@@ -61,20 +62,24 @@ def analyze(article, wiki, start, end, interval, number, output):
                     counts[-1][1])
                 while curdate <= revdate-interval:
                     curdate += interval
-                    counts.append([curdate, 0])
+                    counts.append([curdate, 0, set()])
             counts[-1][1] += 1
+            counts[-1][2].add(rev['user'])
     except StopIteration: # Reached end of revision history
         pass
     # Now calculate moving average
     averages = []
     for counter in range(len(counts) - number + 1):
         averages.append([counts[counter+number-1][0],
-                    sum([x[1] for x in counts[counter:counter+number]])/number])
+                    sum([x[1] for x in counts[counter:counter+number]]),
+                    len(reduce(lambda x, y: x|y, [x[2] for x in
+                                            counts[counter:counter+number]]))])
     final = map(lambda c,a: [c[0].strftime('%Y-%m-%d %H:%M:%S'),
                              (c[0]+interval).strftime('%Y-%m-%d %H:%M:%S'),
-                             c[1], a[1]],
-                counts, [['', '']]*(number-1) + averages)
-    final.insert(0, ['Start', 'End', 'Count', 'Average of %d' % number])
+                             c[1], len(c[2]), a[1], a[2]],
+                counts, [['', '', '']]*(number-1) + averages)
+    final.insert(0, ['Start', 'End', 'Edit Count', 'Editor Count',
+                     'Sum of %d' % number, 'Editors in Window'])
     if output:
         print "Saving to %s..." % output
         csv.writer(open(output, 'wb')).writerows(final)
@@ -90,21 +95,29 @@ def analyze(article, wiki, start, end, interval, number, output):
             pos += inc
         yield data[-1]
 
-    chartmax = max([x[1] for x in counts])
+    # Use 1+number since final's first row is labels
+    chartmax = max(max([x[2] for x in final[1+number-1:]]),
+                   max([x[3] for x in final[1+number-1:]]),
+                   max([x[4] for x in final[1+number-1:]]),
+                   max([x[5] for x in final[1+number-1:]]))
+    print 
     print 'http://chart.apis.google.com/chart' \
           '?chs=600x350' \
-          '&chtt=Edits on "%s" between %s and %s' % (article,
+          '&chtt=Edits on “%s” between %s and %s' % (article,
                     (start+interval*(number-1)).strftime('%Y-%m-%d'),
                     (end-datetime.timedelta(days=1)).strftime('%Y-%m-%d')) + \
-          '&cht=lc' \
-          '&chd=t:'+','.join([str(x[2]) for x in final[1+number-1:]]) + '|' + \
-                    ','.join([str(x[3]) for x in final[1+number-1:]]) + \
+          '&cht=lc&' + \
+          repr(SimpleData([
+                             [x[2] for x in final[1+number-1:]], # edit count
+                             [x[3] for x in final[1+number-1:]], # editors
+                             [x[4] for x in final[1+number-1:]], # window
+                             [x[5] for x in final[1+number-1:]]])) + \
           '&chds=0,' + str(chartmax) + \
-          '&chdl=Edit Count|Moving Average' \
+          '&chdl=Edit Count|Editors|Moving Window|Editors in Window' \
           '&chxt=x,y' \
           '&chdlp=t' \
-          '&chco=FF8040,4040FF' \
-          '&chxl=0:|' + '|'.join([x[0].strftime('%b %-d') for x in samples(counts[number-1:], 12)]) + \
+          '&chco=FF0000,C0C0C0,4040FF,404040' \
+          '&chxl=0:|' + '|'.join([x[0].strftime('%b %e') for x in samples(counts[number-1:], 12)]) + \
           '&chxr=1,0,' + str(chartmax)
 
 
@@ -121,7 +134,7 @@ def main(argv):
     parser.add_option('-i', '--interval', type='string', default='1d',
                       help='Length of each interval [default %default]')
     parser.add_option('-n', '--number', type='int', default=7,
-                      help='Number of intervals in moving average [default %default]')
+                      help='Number of intervals in moving window [default %default]')
     parser.add_option('-o', '--output', type='string', default=None,
                       help='CSV file to save data to')
 
