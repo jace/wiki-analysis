@@ -72,7 +72,7 @@ def getwords(text, splitchars=resplit):
     # Blank tokens will only be at beginning or end of text.
     if result[0] == '':
         result.pop(0)
-    if result[-1] == '':
+    if result and result[-1] == '':
         result.pop(-1)
     return result
 

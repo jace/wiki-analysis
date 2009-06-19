@@ -47,6 +47,17 @@ def analyze(article, start, end, wiki, ignore, outfile):
 
     revisions = page.revisions(start=start.strftime(MWDATEFMT),
                                end=end.strftime(MWDATEFMT),
+                               dir='newer')
+
+    try:
+        rev = revisions.next()
+        startid = rev['revid']
+    except StopIteration:
+        raise NoRevisions
+
+    # We have to do this to work around a bug in mwclient.
+    revisions = page.revisions(startid=startid,
+                               end=end.strftime(MWDATEFMT),
                                dir='newer',
                                prop='ids|timestamp|flags|comment|user|content')
 
