@@ -117,7 +117,7 @@ def analyze(article, wiki, start, end, interval, number, output):
           '&chxt=x,y' \
           '&chdlp=t' \
           '&chco=FF0000,C0C0C0,4040FF,404040' \
-          '&chxl=0:|' + '|'.join([x[0].strftime('%b %e') for x in samples(counts[number-1:], 12)]) + \
+          '&chxl=0:|' + '|'.join([x[0].strftime('%b %e') for x in samples(counts[number-1:], 13)]) + \
           '&chxr=1,0,' + str(chartmax)
 
 
