@@ -1,5 +1,7 @@
 from zope.interface import implements
-from interfaces import ISite
+import zope.interface.verify
+from interfaces import IUsers, IUser
+
 
 from datetime import datetime
 from utils import mwdatetime
@@ -19,7 +21,11 @@ class Users(object):
     """
     Container for all users on the site. Case sensitive. Current versions of
     MediaWiki require the name to start with an uppercase character.
+
+    >>> zope.interface.verify.verifyClass(IUsers, Users)
+    True
     """
+    implements(IUsers)
     def __init__(self, site):
         self._site = site
         self._cache = {}
@@ -54,7 +60,11 @@ class Users(object):
 class User(object):
     """
     Defines a user on the site.
+
+    >>> zope.interface.verify.verifyClass(IUser, User)
+    True
     """
+    implements(IUser)
     def __init__(self, site, username, data={}):
         self._site = site
         self.id = username
@@ -71,6 +81,8 @@ class User(object):
         if 'missing' in data or data.get('registration', None) is None:
             raise UserMissing(username)
         if data['name'] != username:
+            # XXX: 2009-11-03: I don't know the spec well enough to know what
+            # this means, so we declare this an ambiguous situation.
             raise UserAmbiguous(username)
         if updateid:
             self.id = data['name']

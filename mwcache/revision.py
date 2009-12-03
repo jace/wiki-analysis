@@ -1,5 +1,6 @@
 from zope.interface import implements
-from interfaces import ISite
+import zope.interface.verify
+from interfaces import IRevisions, IRevision
 
 MODE_PAGE = 0
 MODE_USER = 1
@@ -15,9 +16,13 @@ class Revisions(object):
     The revision sequence can be queried for revisions between a start and end
     point in either direction, and results will be cached or returned from the
     cache, transparently.
+
+    >>> zope.interface.verify.verifyClass(IRevisions, Revisions)
+    True
     """
     # FIXME: Make this a generic cached list class, of which Revisions is a
     # user or subclass.
+    implements(IRevisions)
     def __init__(self, site, page=None, user=None):
         self._cache_fragments = {} # Hash(start,end): sequence; auto-merged
         self._site = site
@@ -32,7 +37,23 @@ class Revisions(object):
         else:
             raise RevisionInitError("Revisions must be attached to a user or page.")
 
+    def __getitem__(self, revid):
+        raise NotImplemented, "Not yet!"
+
     def __call___(self):
         """
         XXX: Action happens here. Return a generator.
         """
+        raise NotImplemented, "Not yet!"
+
+class Revision(object):
+    """
+    >>> zope.interface.verify.verifyClass(IRevision, Revision)
+    True
+    """
+    implements(IRevision)
+    def prev(self):
+        raise NotImplemented, "Not yet!"
+
+    def next(self):
+        raise NotImplemented, "Not yet!"
