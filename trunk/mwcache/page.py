@@ -1,5 +1,6 @@
 from zope.interface import implements
-from interfaces import ISite
+import zope.interface.verify
+from interfaces import IPages, IPage
 
 from revision import Revisions
 
@@ -11,7 +12,11 @@ class PageMissing(Exception):
 class Pages(object):
     """
     Container for pages on site.
+
+    >>> zope.interface.verify.verifyClass(IPages, Pages)
+    True
     """
+    implements(IPages)
     def __init__(self, site):
         self._site = site
         self._cache = {}
@@ -28,7 +33,11 @@ class Pages(object):
 class Page(object):
     """
     Represents a page on the site. Pages contain revisions.
+
+    >>> zope.interface.verify.verifyClass(IPage, Page)
+    True
     """
+    implements(IPage)
     def __init__(self, site, pagename):
         self._site = site
         self.id = pagename

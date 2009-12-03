@@ -1,4 +1,5 @@
 from zope.interface import implements
+import zope.interface.verify
 from interfaces import ISite
 
 import mwclient
@@ -11,6 +12,9 @@ class Site(object):
     """
     Site objects implement a wrapper around the overall MediaWiki API,
     using the mwclient library as a back-end.
+
+    >>> zope.interface.verify.verifyClass(ISite, Site)
+    True
     """
     implements(ISite)
     def __init__(self, host, path='/w/', ext='.php', pool=None,

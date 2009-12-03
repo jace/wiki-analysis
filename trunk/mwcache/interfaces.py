@@ -7,7 +7,7 @@ class IPages(Interface):
     Container for all pages in a Site.
     """
 
-    def __getitem___(self, page):
+    def __getitem__(page):
         """Returns an IPage object for the specified page."""
 
 
@@ -15,10 +15,10 @@ class IUsers(Interface):
     """
     Collection of users on the site.
     """
-    def __getitem___(self, user):
+    def __getitem__(user):
         """Returns an IUser object for the specified user."""
 
-    def cache(self, usernames):
+    def cache(usernames):
         """Get multiple users into the cache."""
 
 
@@ -37,9 +37,7 @@ class IRevisions(Interface):
     and retrieves from upstream to fill gaps in the cache. An IRevision's
     length is undefined because
     """
-    def __getitem__(self, number):
-        """Returns an IRevision object for the given sequence number."""
-    def get(self, revisionid):
+    def __getitem__(number):
         """Returns an IRevision object for the given revision id."""
 
 
@@ -76,3 +74,8 @@ class IRevision(Interface):
     user = Object(IUser)
     page = Object(IPage)
     text = Text(required=False)
+
+    def prev():
+        """Return the previous revision on this page."""
+    def next():
+        """Return the next revision on this page."""
