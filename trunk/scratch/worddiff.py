@@ -27,6 +27,7 @@ def _makecharregex(chars):
 
 resplit = re.compile(_makecharregex(IGNORECHARS))
 resplit = re.compile('\W+') # XXX: Apostrophe eating splitter
+resplitsentence = re.compile('[\.?!|]+')
 retag = re.compile('<.*?>')
 
 def striptags(text):
@@ -75,6 +76,23 @@ def getwords(text, splitchars=resplit):
     if result and result[-1] == '':
         result.pop(-1)
     return result
+
+def getsentences(text):
+    """
+    Simplistic sentence splitter. Cuts input text at a period, exclamation or
+    question mark. Not for serious use.
+
+    >>> getsentences("This is a single sentence.")
+    ['This is a single sentence']
+    >>> getsentences("This is one sentence. This is another.")
+    ['This is one sentence', 'This is another']
+    """
+    result = resplitsentence.split(text)
+    if result[0] == '':
+        result.pop(0)
+    if result and result[-1] == '':
+        result.pop(-1)
+    return [sentence.strip() for sentence in result]
 
 def worddiff(text1, text2):
     """

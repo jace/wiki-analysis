@@ -2,26 +2,26 @@
 # -*- coding: utf-8  -*-
 """
 For a given Wikipedia article and number of days of history, this script looks
-up all the changes introduced by each editor and finds all the words that are
-no longer on the current revision of the page.
+up all the changes introduced by each editor and finds all the sentences that
+are no longer on the current revision of the page.
 
 This is a demo for FOSS.in 2009.
 """
 
 # Process:
 # 1. Take number of days
-# 2. Get most recent revision. Wordify it. Make set of words
-# 3. Make empty set for historical words
+# 2. Get most recent revision. Make set of sentences
+# 3. Make empty set for historical sentences
 # 4. Get earlier revision, wordify it, add to set
 # 5. Break when done with history
-# 6. Subtract current words from historical words. Display
+# 6. Subtract current sentences from historical sentences. Display
 
 
 import sys
 from optparse import OptionParser
 import datetime
 import mwclient
-from worddiff import getwords, striptags
+from worddiff import getsentences, striptags
 from timehelper import MWDATEFMT, parseperiod
 
 
@@ -41,7 +41,7 @@ def analyze(article, days, wiki):
     page = site.Pages[article]
     if 0: assert isinstance(page, mwclient.page.Page)
 
-    allwords = set() # Set of all words found across editors
+    allsentences = set() # Set of all sentences found across editors and revisions
 
     revisions = page.revisions(end=end.strftime(MWDATEFMT),
                                prop='ids|timestamp|flags|comment|user|content')
@@ -49,7 +49,7 @@ def analyze(article, days, wiki):
     try:
         rev = revisions.next()
         content = striptags(rev[u'*'])
-        currentwords = set(getwords(content)) # Words in current revision
+        currentsentences = set(getsentences(content)) # Sentences in current revision
     except StopIteration:
         raise NoRevisions
 
@@ -67,16 +67,17 @@ def analyze(article, days, wiki):
             rev = revisions.next() # Use first revision only as reference point
             revision_count += 1
             content = striptags(rev[u'*'])
-            allwords.update(set(getwords(content)))
+            allsentences.update(set(getsentences(content)))
             # Done. On to next revision.
     except StopIteration:
         pass
 
     print
 
-    print "Words in the revision history that are not in the current revision:"
+    print "Sentences in the revision history that are not in the current revision:"
 
-    print ', '.join([word.encode('utf-8') for word in (allwords - currentwords)])
+    for sentence in (allsentences - currentsentences):
+        print sentence.encode('utf-8')
 
 
 def main(argv):
