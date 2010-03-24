@@ -15,6 +15,9 @@ from timehelper import parsedate, MWDATEFMT
 class IgnoreEditor(Exception):
     pass
 
+class NoRevisions(Exception):
+    pass
+
 def analyze(article, start, end, wiki, ignore, outfile, filtercount,
             filterminedits, filtermaxedits):
     start = parsedate(start)
@@ -30,6 +33,17 @@ def analyze(article, start, end, wiki, ignore, outfile, filtercount,
     # Place all editors in a dictionary
     editors = {}
     revisions = page.revisions(start=start.strftime(MWDATEFMT),
+                               end=end.strftime(MWDATEFMT),
+                               dir='newer')
+
+    try:
+        rev = revisions.next()
+        startid = rev['revid']
+    except StopIteration:
+        raise NoRevisions
+
+    # We have to do this to work around a (still not fixed?) bug in mwclient.
+    revisions = page.revisions(startid=startid,
                                end=end.strftime(MWDATEFMT),
                                dir='newer')
 
