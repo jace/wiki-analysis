@@ -1,0 +1,1 @@
+Tools for statistical analysis of editing patterns in Wikipedia and other MediaWiki-based wikis. More information at our [project blog](http://cis-india.org/research/cis-raw/histories-of-the-internet/wiki-analysis-and-assist).
